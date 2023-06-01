@@ -3,6 +3,11 @@ uuid = "a0b7e00f-cd9f-425a-8c23-86a36337abea"
 authors = ["Oleg Soloviev <oleg.soloviev@gmail.com> and contributors"]
 version = "1.0.0-DEV"
 
+[deps]
+CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
+FFTViews = "4f61f5a4-77b1-5117-aa51-3ab5ef4ef0cd"
+PhaseUtils = "0a972ece-1c72-4cf4-81fb-1c0dc9b4cac1"
+
 [compat]
 julia = "1"
 
