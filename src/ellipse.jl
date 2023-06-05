@@ -68,3 +68,71 @@ function getellipsepoints(cx, cy, rx, ry, θ)
 	(x,y)
 end
 
+function _pos_to_elpoints(positions)
+    if length(positions) > 4
+        coeffs = fit_ellipse(to_value(positions))
+        el = conic_to_axes(coeffs)
+        ppp = getellipsepoints(el...)
+        return elp = map(Point2f, zip(ppp...))
+    else 
+        return Point2f[]
+    end
+end
+
+"""
+    draw_ellipse(img)
+
+Display an image and let you draw an ellipse there. 
+    Controls :
+    a+ click to add a point
+    d+ click to delete a point
+    mouse wheel or left mouse press and draw to soom
+    right mouse to pan
+    Ctrl+click to reset zoom
+    Esc or q to quit
+"""
+function draw_ellipse(i)
+    fig,ax, img = image(rotr90(i), axis = (aspect=DataAspect(),))
+
+    positions = Observable(Point2f[])
+    # el_points = Observable(Point2f[])
+    el_points = map(_pos_to_elpoints, positions)
+
+    p = scatter!(ax, positions)
+    c = lines!(ax, el_points)
+    
+    on(events(fig).mousebutton, priority = 2) do event
+        if event.button == Mouse.left && event.action == Mouse.press
+            if Keyboard.d in events(fig).keyboardstate
+                # Delete marker
+                plt, i = pick(fig)
+                if plt == p
+                    deleteat!(positions[], i)
+                    notify(positions)
+                    notify(el_points)
+                    return Consume(true)
+                end
+            elseif Keyboard.a in events(fig).keyboardstate
+                # Add marker
+                push!(positions[], mouseposition(ax))
+                notify(positions)
+                notify(el_points)
+                return Consume(true)
+            end
+
+            # if length(to_value(positions)) > 4
+            #     coeffs = fit_ellipse(to_value(positions))
+            #     el = conic_to_axes(coeffs)
+            #     ppp = getellipsepoints(el...)
+            #     elp = map(Point2f, zip(ppp...))
+            #     el_points[] = elp
+            # end
+        end
+        return Consume(false)
+    end
+
+    
+    
+    fig
+
+end  # function draw_ellipse
