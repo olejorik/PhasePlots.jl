@@ -91,7 +91,8 @@ Display an image and let you draw an ellipse there.
     Ctrl+click to reset zoom
     Esc or q to quit
 """
-function draw_ellipse(i)
+function draw_ellipse(i, el_coeff)
+    length(el_coeff) == 6 || return
     fig,ax, img = image(rotr90(i), axis = (aspect=DataAspect(),))
 
     positions = Observable(Point2f[])
@@ -131,8 +132,24 @@ function draw_ellipse(i)
         return Consume(false)
     end
 
+    fig |> display
+
+    on(events(fig).keyboardbutton) do event
+        if event.action == Keyboard.press || event.action == Keyboard.repeat
+            if length(to_value(positions)) < 5 
+                Consume()
+                return el_coeff .= zeros(6)
+            else
+                if event.key == Keyboard.q
+                    println("q is pressed, the data are saved")
+
+                    println("$(fit_ellipse(to_value(positions)))")
+                    return el_coeff .= fit_ellipse(to_value(positions))
+                   
+                end
+            end
+        end
+    end
     
-    
-    fig
 
 end  # function draw_ellipse
