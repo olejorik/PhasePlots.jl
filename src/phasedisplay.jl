@@ -9,7 +9,7 @@ function showarray!(arr, colormap=:viridis)
 end
 
 function showarray(arr, colormap = :viridis; args...)
-    return heatmap(rotr90(arr), colormap = colormap; axis=(
+    return heatmap(rotr90(arr), colormap = colormap, axis=(
         aspect=DataAspect(),
     ), args...)
 end
@@ -38,13 +38,12 @@ function showphasetight(
     hidedec=true,
     kwarg...,
 )
-    inarr = bboxview(rotr90(inarr))
+    inarr = bboxview(inarr)
     if max(size(inarr)...) > picsize
         arr = imresize(inarr, picsize)
     else
         arr = inarr
     end
-    rows, cols = size(arr)
 
     if typeof(fig) == GridPosition
         pos = fig
@@ -54,21 +53,55 @@ function showphasetight(
     ax = CairoMakie.Axis(
         pos;
         aspect=AxisAspect(1),
-        #    autolimitaspect = 1,
-        #    xlabel = L"\sigma_x",
-        #    ylabel = L"\sigma_y",
-        #    xticks = ([0.5, cols / 2 + 0.5, cols + 0.5], [L"-\frac{1}{2s}", L"0", L"\frac{1}{2s}"]),
-        #    yticks = ([0.5, rows / 2 + 0.5, rows + 0.5], [L"-\frac{1}{2s}", L"0", L"\frac{1}{2s}"])
     )
-    # contourrange = map(x-> 0.5:1:x, size(arr))
     hm = heatmap!(ax, phwrap.(rotr90(arr)); colormap=cm, colorrange=(-π, π), kwarg...)
-    # hm = heatmap!(ax, contourrange[2], contourrange[1], phwrap.(arr), colormap = cm, colorrange =(-π,π), kwarg...)
     if hidedec
         hidedecorations!(ax; grid=false)
     end
-    # cb = Colorbar(fig[1,2], hm, width = 10, tellheight=true)
-    # cb.ticks = (-π:π/2:π, ["-π","-π/2", "0","π/2","π"])
     return fig, ax, hm
 end
 
-export showphase, showphasetight, showarray, phasemap, showarray!
+@recipe(PhasePlot, arr) do scene
+    Attributes(
+            colormap = phasemap,
+            colorrange=(-π,π),
+            crop = true,
+    )
+    end
+
+function Makie.plot!(p::PhasePlot{<:Tuple{<:AbstractArray}})
+    arr =p[:arr][] 
+    # arr =p[:arr][] |> rotr90
+    if p[:crop][]
+        @debug "cropped array"
+        arr = bboxview(p[:arr][])
+    end
+    hm = heatmap!(p, rotr90(arr); colormap = p[:colormap],
+    colorrange=p[:colorrange][]
+    , axis = (aspect = DataAspect(),)
+    )
+    
+    # tightlimits!(p.plots.axis)
+    # @info p.plots
+    return p
+end
+
+phasetheme = Theme(
+    Axis = (
+        aspect = DataAspect(),        
+        leftspinevisible = false,
+        rightspinevisible = false,
+        bottomspinevisible = false,
+        topspinevisible = false,
+        yticksvisible = false,
+        xticksvisible = false,
+        yticklabelsvisible = false,
+        xticklabelsvisible = false,
+        xautolimitmargin = (0, 0),
+        yautolimitmargin = (0, 0),
+    ),
+    colormap = phasemap
+)
+
+export showphase, showphasetight, showarray, phasemap, showarray!, phaseplot, phaseplot!
+export phasetheme
