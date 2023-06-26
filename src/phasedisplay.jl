@@ -14,12 +14,12 @@ function showarray(arr, colormap = :viridis; args...)
     ), args...)
 end
 
-function showphase(inarr, fig=Figure(), picsize=512, cm=:cyclic_mygbm_30_95_c78_n256)
-    if max(size(rotr90(inarr))...) > picsize
-        arr = imresize(inarr, picsize)
-    else
+function showphase(inarr, fig=Figure(), picsize=512, cm=phasemap)
+    # if max(size(rotr90(inarr))...) > picsize
+    #     arr = imresize(inarr, picsize)
+    # else
         arr = inarr
-    end
+    # end
 
     ax = CairoMakie.Axis(
         fig[1, 1];
@@ -34,16 +34,16 @@ function showphasetight(
     inarr,
     fig=Figure();
     picsize=512,
-    cm=:cyclic_mygbm_30_95_c78_n256,
+    cm=phasemap,
     hidedec=true,
     kwarg...,
 )
     inarr = bboxview(inarr)
-    if max(size(inarr)...) > picsize
-        arr = imresize(inarr, picsize)
-    else
+    # if max(size(inarr)...) > picsize
+    #     arr = imresize(inarr, picsize)
+    # else
         arr = inarr
-    end
+    # end
 
     if typeof(fig) == GridPosition
         pos = fig
@@ -62,24 +62,44 @@ function showphasetight(
 end
 
 @recipe(PhasePlot, arr) do scene
-    Attributes(
-            colormap = phasemap,
-            colorrange=(-π,π),
-            crop = true,
+    Attributes(        
+        colormap = phasemap,
+        colorrange=(-π,π),
+        crop = true,
     )
+    # Theme(
+    #         Axis = (
+    #             aspect = 1, 
+    #             leftspinevisible = false,
+    #             rightspinevisible = false,
+    #             bottomspinevisible = false,
+    #             topspinevisible = false,
+    #             yticksvisible = false,
+    #             xticksvisible = false,
+    #             yticklabelsvisible = false,
+    #             xticklabelsvisible = false,
+    #             xautolimitmargin = (0, 0),
+    #             yautolimitmargin = (0, 0),
+    #         ),
+    # )
     end
 
 function Makie.plot!(p::PhasePlot{<:Tuple{<:AbstractArray}})
     arr =p[:arr][] 
     # arr =p[:arr][] |> rotr90
     if p[:crop][]
-        @debug "cropped array"
+        @info "cropped array"
         arr = bboxview(p[:arr][])
     end
-    hm = heatmap!(p, rotr90(arr); colormap = p[:colormap],
-    colorrange=p[:colorrange][]
-    , axis = (aspect = DataAspect(),)
-    )
+    # hm = heatmap!(p, rotr90(arr); colormap = p[:colormap],
+    # colorrange=p[:colorrange][], 
+    # axis = (aspect =  1,)
+    # )
+    with_theme(phasetheme) do     
+        heatmap!(p, rotr90(arr)
+        )
+        
+    end
     
     # tightlimits!(p.plots.axis)
     # @info p.plots
@@ -88,7 +108,7 @@ end
 
 phasetheme = Theme(
     Axis = (
-        aspect = DataAspect(),        
+        aspect = 1, 
         leftspinevisible = false,
         rightspinevisible = false,
         bottomspinevisible = false,
