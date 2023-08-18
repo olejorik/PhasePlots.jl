@@ -5,44 +5,34 @@ phasemap = :cyclic_mygbm_30_95_c78_n256
 # end
 
 function showarray!(arr, colormap=:viridis)
-    return heatmap!(rotr90(arr); colormap=colormap,)
+    return heatmap!(rotr90(arr); colormap=colormap)
 end
 
-function showarray(arr, colormap = :viridis; args...)
-    return heatmap(rotr90(arr), colormap = colormap, axis=(
-        aspect=DataAspect(),
-    ), args...)
+function showarray(arr, colormap=:viridis; args...)
+    return heatmap(rotr90(arr); colormap=colormap, axis=(aspect=DataAspect(),), args...)
 end
 
-function showphase(inarr, fig=Figure(), picsize=512, cm=phasemap)
+function showphase(inarr; fig=Figure(), picsize=512, cm=phasemap)
     # if max(size(rotr90(inarr))...) > picsize
     #     arr = imresize(inarr, picsize)
     # else
-        arr = inarr
+    arr = Array(inarr)
     # end
 
-    ax = CairoMakie.Axis(
-        fig[1, 1];
-        aspect=1,
-        )
-    hm = heatmap!(ax, phwrap.(rotr90(arr)); colormap=cm)
+    ax = CairoMakie.Axis(fig[1, 1]; aspect=1)
+    hm = heatmap!(ax, phwrap.(rotr90(arr)); colormap=cm, colorrange=(-π, π))
     cb = Colorbar(fig[1, 2], hm; width=10, tellheight=true)
     return fig, ax, cb
 end
 
 function showphasetight(
-    inarr,
-    fig=Figure();
-    picsize=512,
-    cm=phasemap,
-    hidedec=true,
-    kwarg...,
+    inarr, fig=Figure(); picsize=512, cm=phasemap, hidedec=true, kwarg...
 )
-    inarr = bboxview(inarr)
+    inarr = bboxview(Array(inarr))
     # if max(size(inarr)...) > picsize
     #     arr = imresize(inarr, picsize)
     # else
-        arr = inarr
+    arr = inarr
     # end
 
     if typeof(fig) == GridPosition
@@ -50,10 +40,7 @@ function showphasetight(
     else
         pos = fig[1, 1]
     end
-    ax = CairoMakie.Axis(
-        pos;
-        aspect=AxisAspect(1),
-    )
+    ax = CairoMakie.Axis(pos; aspect=AxisAspect(1))
     hm = heatmap!(ax, phwrap.(rotr90(arr)); colormap=cm, colorrange=(-π, π), kwarg...)
     if hidedec
         hidedecorations!(ax; grid=false)
@@ -62,14 +49,10 @@ function showphasetight(
 end
 
 @recipe(PhasePlot, arr) do scene
-    Attributes(        
-        colormap = phasemap,
-        colorrange=(-π,π),
-        crop = true,
-    )
+    Attributes(; colormap=phasemap, colorrange=(-π, π), crop=true)
     # Theme(
     #         Axis = (
-    #             aspect = 1, 
+    #             aspect = 1,
     #             leftspinevisible = false,
     #             rightspinevisible = false,
     #             bottomspinevisible = false,
@@ -82,45 +65,43 @@ end
     #             yautolimitmargin = (0, 0),
     #         ),
     # )
-    end
+end
 
 function Makie.plot!(p::PhasePlot{<:Tuple{<:AbstractArray}})
-    arr =p[:arr][] 
+    arr = p[:arr][]
     # arr =p[:arr][] |> rotr90
     if p[:crop][]
         @info "cropped array"
         arr = bboxview(p[:arr][])
     end
     # hm = heatmap!(p, rotr90(arr); colormap = p[:colormap],
-    # colorrange=p[:colorrange][], 
+    # colorrange=p[:colorrange][],
     # axis = (aspect =  1,)
     # )
-    with_theme(phasetheme) do     
-        heatmap!(p, rotr90(arr)
-        )
-        
+    with_theme(phasetheme) do
+        heatmap!(p, rotr90(arr))
     end
-    
+
     # tightlimits!(p.plots.axis)
     # @info p.plots
     return p
 end
 
-phasetheme = Theme(
-    Axis = (
-        aspect = 1, 
-        leftspinevisible = false,
-        rightspinevisible = false,
-        bottomspinevisible = false,
-        topspinevisible = false,
-        yticksvisible = false,
-        xticksvisible = false,
-        yticklabelsvisible = false,
-        xticklabelsvisible = false,
-        xautolimitmargin = (0, 0),
-        yautolimitmargin = (0, 0),
+phasetheme = Theme(;
+    Axis=(
+        aspect=1,
+        leftspinevisible=false,
+        rightspinevisible=false,
+        bottomspinevisible=false,
+        topspinevisible=false,
+        yticksvisible=false,
+        xticksvisible=false,
+        yticklabelsvisible=false,
+        xticklabelsvisible=false,
+        xautolimitmargin=(0, 0),
+        yautolimitmargin=(0, 0),
     ),
-    colormap = phasemap
+    colormap=phasemap,
 )
 
 export showphase, showphasetight, showarray, phasemap, showarray!, phaseplot, phaseplot!
