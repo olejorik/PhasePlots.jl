@@ -4,8 +4,8 @@ phasemap = :cyclic_mygbm_30_95_c78_n256
 #     return heatmap(rotr90(arr); colormap=colormap, axis=(aspect=DataAspect(),))
 # end
 
-function showarray!(arr, colormap=:viridis)
-    return heatmap!(rotr90(arr); colormap=colormap)
+function showarray!(arr, colormap=:viridis; args...)
+    return heatmap!(rotr90(arr); colormap=colormap, args...)
 end
 
 function showarray(arr, colormap=:viridis; args...)
