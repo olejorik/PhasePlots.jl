@@ -37,23 +37,35 @@ function conic_to_axes(coeffs, normalise=true)
 end
 
 """
-    fit_ellipse(positions::Vector{Point2f})
+    fit_ellipse(positions::Vector{Point2-like}, weights = ones)
 
 Document this function
 """
-function fit_ellipse(positions)
-    length(positions) < 5 && return zeros(6) # to make mask infinite for less than 5 points
-    zzz = point_conic_eq.(to_value(positions))
-    b = -ones(length(to_value(positions)))
+function fit_ellipse(positions, w=ones(length(positions)))
+    length(positions) < 5 && return zeros(6) # infinite ellipse for less than 5 points
+    b = -w
+    zzz = point_conic_eq.(positions) .* w
     A = hcat(zzz...)'
     coeffs = A \ b
     return vcat(coeffs, [1])
 end  # function fit_ellipse
 
-function point_conic_eq(p::Point2f)
-    x, y = p.data
+# function fit_ellipse(positions)
+#     length(positions) < 5 && return zeros(6) # infinite ellipse for less than 5 points
+#     b = -ones(length(to_value(positions)))
+#     zzz = point_conic_eq.(to_value(positions))
+#     A = hcat(zzz...)'
+#     coeffs = A \ b
+#     return vcat(coeffs, [1])
+# end
+
+function point_conic_eq(x, y)
     return [x^2, x * y, y^2, x, y]
 end
+
+point_conic_eq(p::Point2) = point_conic_eq(p.data...)
+point_conic_eq(p::CartesianIndex) = point_conic_eq(p.I...)
+
 
 function getellipsepoints(cx, cy, rx, ry, θ)
     t = range(0, 2 * pi; length=100)
@@ -98,20 +110,35 @@ Display an image and let you draw an ellipse there.
     Controls :
     a+ click to add a point
     d+ click to delete a point
-    mouse wheel or left mouse press and draw to soom
+    mouse wheel or left mouse press and draw to zoom
     right mouse to pan
     Ctrl+click to reset zoom
     Esc or q to quit
 """
 function draw_ellipse(img)
     ready = false
+    displayhelp = Observable(true)
+    state = Observable(:pass)
+
+    helpmessage = """
+    Controls :
+    a to swith to "add a point" mode
+    d to swith to "delete a point" mode
+    p to swith to passive mode
+    h to show/hide this message
+    mouse wheel or left mouse press and draw to zoom
+    right mouse to pan
+    Ctrl+click to reset zoom
+    Esc or q to quit
+    """
+
     fig, ax, implot = image(rotr90(img); axis=(aspect=DataAspect(),))
 
     positions = Observable(Point2f[])
     current_el = lift(fit_ellipse, positions)
     el_points = map(_pos_to_elpoints, positions)
     overlay = lift(current_el) do current_el
-        mask = mask_ellipse(img, current_el)
+        mask = mask_ellipse(rotr90(img), current_el)
         ap2mask(1 .- mask)
     end
 
@@ -120,9 +147,22 @@ function draw_ellipse(img)
     p = scatter!(ax, positions)
     c = lines!(ax, el_points)
 
+    text!(
+        0.1,
+        0.9;
+        text=helpmessage,
+        space=:relative,
+        color=:white,
+        font=:bold,
+        align=(:left, :top),
+        visible=displayhelp,
+        glowwidth=1,
+        fontssize=24,
+    )
+
     on(events(fig).mousebutton; priority=2) do event
         if event.button == Mouse.left && event.action == Mouse.press
-            if Keyboard.d in events(fig).keyboardstate
+            if state[] == :delete
                 # Delete marker
                 plt, i = pick(fig)
                 if plt == p
@@ -130,7 +170,7 @@ function draw_ellipse(img)
                     notify(positions)
                     return Consume(true)
                 end
-            elseif Keyboard.a in events(fig).keyboardstate
+            elseif state[] == :add
                 # Add marker
                 push!(positions[], mouseposition(ax))
                 notify(positions)
@@ -144,19 +184,48 @@ function draw_ellipse(img)
 
     on(events(fig).keyboardbutton) do event
         if event.action == Keyboard.press || event.action == Keyboard.repeat
-            if event.key == Keyboard.q
-                println("q is pressed, the data are saved")
+            if event.key == Keyboard.q || event.key == Keyboard.escape
+                println("q/esc is pressed, the data are saved")
                 println("$(fit_ellipse(to_value(positions)))")
                 ready = true
                 close(screen)
                 # return el .= current_el[]
+            elseif event.key == Keyboard.h
+                displayhelp[] = !displayhelp[]
+            elseif event.key == Keyboard.a
+                state[] = :add
+            elseif event.key == Keyboard.d
+                state[] = :delete
+            elseif event.key == Keyboard.p
+                state[] = :pass
             end
 
         end
     end
     wait(screen)
-    return current_el[], rotr90(mask_ellipse(img, current_el[]), 3)
+    return to_value(current_el), rotr90(mask_ellipse(rotr90(img), to_value(current_el)), 3)
 end  # function draw_ellipse
 
 
 export draw_ellipse
+
+####
+# Approach through a special type and Makie recipes
+#
+
+struct Ellipse{T<:Real}
+    A::T
+    B::T
+    C::T
+    D::T
+    E::T
+    F::T
+end
+
+Ellipse(A, B, C, D, E, F) = Ellipse(promote(A, B, C, D, E, F)...)
+
+conic(x::Ellipse) = [x.A, x.B, x.C, x.D, x.E, x.F]
+
+# using CairoMakie
+# CairoMakie.convert_arguments(::Type{<:AbstractPlot}, x::Ellipse) =
+#     (map(Point2f, zip(getellipsepoints(conic_to_axes(conic(x))...)...)),)
