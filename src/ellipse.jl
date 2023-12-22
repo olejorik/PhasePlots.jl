@@ -226,6 +226,13 @@ Ellipse(A, B, C, D, E, F) = Ellipse(promote(A, B, C, D, E, F)...)
 
 conic(x::Ellipse) = [x.A, x.B, x.C, x.D, x.E, x.F]
 
-# using CairoMakie
-# CairoMakie.convert_arguments(::Type{<:AbstractPlot}, x::Ellipse) =
-#     (map(Point2f, zip(getellipsepoints(conic_to_axes(conic(x))...)...)),)
+function centeraxesangle(el::Ellipse)
+    cas = conic_to_axes(conic(el))
+    return (center=cas[1:2], axes=cas[3:4], ϕb=cas[5])
+end
+
+mask_ellipse(img, el::Ellipse) = mask_ellipse(img, conic(el))
+
+using CairoMakie
+CairoMakie.convert_arguments(::Type{<:AbstractPlot}, x::Ellipse) =
+    (map(Point2f, zip(getellipsepoints(conic_to_axes(conic(x))...)...)),)
