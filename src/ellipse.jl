@@ -7,7 +7,7 @@ function conic_to_axes(coeffs, normalise=true)
 
     A, B, C, D, E, F = coeffs
 
-    # Usefult intermediates
+    # Useful intermediates
     disc = B * B - 4 * A * C
 
     # Center

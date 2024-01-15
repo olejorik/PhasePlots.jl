@@ -9,7 +9,12 @@ function showarray!(arr, colormap=:viridis; args...)
 end
 
 function showarray(arr, colormap=:viridis; args...)
-    return heatmap(rotr90(arr); colormap=colormap, axis=(aspect=DataAspect(),), args...)
+    return heatmap(
+        rotr90(arr);
+        colormap=colormap,
+        args...,
+        axis=merge(args[:axis], (aspect=DataAspect(),)),
+    )
 end
 
 function showphase(inarr; fig=Figure(), picsize=512, cm=phasemap)
