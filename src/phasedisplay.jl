@@ -4,20 +4,20 @@ phasemap = :cyclic_mygbm_30_95_c78_n256
 #     return heatmap(rotr90(arr); colormap=colormap, axis=(aspect=DataAspect(),))
 # end
 
-function showarray!(arr, colormap=:viridis; args...)
-    return heatmap!(rotr90(arr); colormap=colormap, args...)
+function showarray!(arr, colormap=:viridis, rot=1; args...)
+    return heatmap!(rotr90(arr, rot); colormap=colormap, args...)
 end
 
-function showarray(arr, colormap=:viridis; args...)
+function showarray(arr, colormap=:viridis, rot=1; args...)
     return heatmap(
-        rotr90(arr);
+        rotr90(arr, rot);
         colormap=colormap,
         args...,
-        axis=merge(args[:axis], (aspect=DataAspect(),)),
+        axis=merge(get(args, :axis, (;)), (aspect=DataAspect(),)),
     )
 end
 
-function showphase(inarr; fig=Figure(), picsize=512, cm=phasemap)
+function showphase(inarr; rot=1, fig=Figure(), picsize=512, cm=phasemap)
     # if max(size(rotr90(inarr))...) > picsize
     #     arr = imresize(inarr, picsize)
     # else
@@ -25,9 +25,15 @@ function showphase(inarr; fig=Figure(), picsize=512, cm=phasemap)
     # end
 
     ax = CairoMakie.Axis(fig[1, 1]; aspect=1)
-    hm = heatmap!(ax, phwrap.(rotr90(arr)); colormap=cm, colorrange=(-π, π))
+    hm = heatmap!(ax, phwrap.(rotr90(arr, rot)); colormap=cm, colorrange=(-π, π))
     cb = Colorbar(fig[1, 2], hm; width=10, tellheight=true)
     return fig, ax, cb
+end
+
+function showphase!(ax, inarr; rot=1, picsize=512, cm=phasemap)
+    arr = Array(inarr)
+    hm = heatmap!(ax, phwrap.(rotr90(arr, rot)); colormap=cm, colorrange=(-π, π))
+    return hm
 end
 
 function showphasetight(
