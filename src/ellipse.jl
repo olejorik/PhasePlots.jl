@@ -36,6 +36,21 @@ function conic_to_axes(coeffs, normalise=true)
     return x0, y0, a, b, phi_b
 end
 
+function axes_to_conic(centre, axes, angle)
+    x0, y0 = centre
+    a, b = sort(axes; rev=true)
+
+    A = (a * sin(angle))^2 + (b * cos(angle))^2
+    B = 2 * (b * b - a * a) * sin(angle) * cos(angle)
+    C = (a * cos(angle))^2 + (b * sin(angle))^2
+    D = -2 * A * x0 - B * y0
+    E = -B * x0 - 2 * C * y0
+    F = A * x0 * x0 + B * x0 * y0 + C * y0 * y0 - a * a * b * b
+    return [A, B, C, D, E, F] ./ F
+end
+
+axes_to_conic(x0, y0, a, b, phi_b) = axes_to_conic((x0, y0), (a, b), phi_b)
+
 """
     fit_ellipse(positions::Vector{Point2-like}, weights = ones)
 
@@ -224,6 +239,8 @@ end
 
 Ellipse(A, B, C, D, E, F) = Ellipse(promote(A, B, C, D, E, F)...)
 
+Ellipse(coef::Vector) = Ellipse(coef...)
+
 conic(x::Ellipse) = [x.A, x.B, x.C, x.D, x.E, x.F]
 
 function centeraxesangle(el::Ellipse)
@@ -232,6 +249,15 @@ function centeraxesangle(el::Ellipse)
 end
 
 mask_ellipse(img, el::Ellipse) = mask_ellipse(img, conic(el))
+
+
+function scale(el::Ellipse, c)
+    center, ax, angle = centeraxesangle(el)
+    return Ellipse(axes_to_conic(center, ax .* c, angle))
+end
+
+scale_el(el::Vector, c) = conic(scale(Ellipse(el), c))
+
 
 using CairoMakie
 CairoMakie.convert_arguments(::Type{<:AbstractPlot}, x::Ellipse) =
