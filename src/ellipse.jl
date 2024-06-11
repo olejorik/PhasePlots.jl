@@ -38,7 +38,8 @@ end
 
 function axes_to_conic(centre, axes, angle)
     x0, y0 = centre
-    a, b = sort(axes; rev=true)
+    # a, b = sort(axes; rev=true)
+    a, b = axes
 
     A = (a * sin(angle))^2 + (b * cos(angle))^2
     B = 2 * (b * b - a * a) * sin(angle) * cos(angle)
