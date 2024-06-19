@@ -19,19 +19,19 @@ function conic_to_axes(coeffs, normalise=true)
     a = -sqrt(term1 * (A + C + sqrt((A - C)^2 + B^2))) / disc
     b = -sqrt(term1 * (A + C - sqrt((A - C)^2 + B^2))) / disc
 
-    if A < C
-        if B == 0
-            phi_b = 0
-        else
-            phi_b = atan(B / (A - C)) / 2
-        end
-    else
-        if B == 0
-            phi_b = π / 2
-        else
-            phi_b = atan(B / (A - C)) / 2 - π / 2
-        end
-    end
+    # if A < C
+    #     if B == 0
+    #         phi_b = 0
+    #     else
+    #         phi_b = atan(B / (A - C)) / 2
+    #     end
+    # else
+    #     if B == 0
+    #         phi_b = π / 2
+    #     else
+    #         phi_b = atan(B / (A - C)) / 2 - π / 2
+    #     end
+    # end
 
     return x0, y0, a, b, phi_b
 end
