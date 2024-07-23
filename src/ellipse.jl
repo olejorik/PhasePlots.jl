@@ -173,7 +173,7 @@ function draw_ellipse(img)
         align=(:left, :top),
         visible=displayhelp,
         glowwidth=1,
-        fontssize=24,
+        fontsize=24,
     )
 
     on(events(fig).mousebutton; priority=2) do event
