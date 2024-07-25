@@ -138,7 +138,7 @@ function plot_heatmaps_table(
     ind(i) = divrem(i - 1 + ncols, ncols)
 
     _nrows = ceil(Int, length(heatmaps_array) / ncols)
-    fig = Figure(; resolution=(width * ncols, height * _nrows))
+    fig = Figure(; size=(width * ncols, height * _nrows))
 
     ## Define a common color range for all heatmaps
     min_val = minimum([minimum(filter(!isnan, hm)) for hm in heatmaps_array])
