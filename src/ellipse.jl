@@ -32,6 +32,7 @@ function conic_to_axes(coeffs, normalise=true)
     #         phi_b = atan(B / (A - C)) / 2 - π / 2
     #     end
     # end
+    phi_b = atan(-B, C - A) / 2
 
     return x0, y0, a, b, phi_b
 end

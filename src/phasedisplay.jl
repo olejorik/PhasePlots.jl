@@ -119,5 +119,55 @@ phasetheme = Theme(;
     colormap=phasemap,
 )
 
+# functions to show array of similar plots
+#
+#
+function plot_heatmaps_table(
+    heatmaps_array;
+    ncols::Int=0,
+    width=150,
+    height=150,
+    colormap=:viridis,
+    hidedecorations=false,
+    kwargs...,
+)
+    if ncols == 0
+        ## Calculate the number of columns based on the number of heatmaps
+        ncols = ceil(Int, sqrt(length(heatmaps_array)))
+    end
+    ind(i) = divrem(i - 1 + ncols, ncols)
+
+    _nrows = ceil(Int, length(heatmaps_array) / ncols)
+    fig = Figure(; resolution=(width * ncols, height * _nrows))
+
+    ## Define a common color range for all heatmaps
+    min_val = minimum([minimum(filter(!isnan, hm)) for hm in heatmaps_array])
+    max_val = maximum([maximum(filter(!isnan, hm)) for hm in heatmaps_array])
+
+    ## Generate heatmaps
+    for (i, hm) in enumerate(heatmaps_array)
+        ax = Axis(fig[ind(i)...]; width=width, height=height, aspect=DataAspect())
+        if hidedecorations
+            hidedecorations!(ax)
+        end
+        heatmap!(ax, hm; colorrange=(min_val, max_val), colormap=colormap, kwargs...)
+    end
+
+    ## Add a common colorbar
+    Colorbar(fig[end + 1, :]; limits=(min_val, max_val), colormap=colormap, vertical=false)
+
+    resize_to_layout!(fig)
+    return fig
+end
+
+# # to mark some details on the plot
+circle_with_hole(r=0.9) = BezierPath([
+    MoveTo(Point(1, 0)),
+    EllipticalArc(Point(0, 0), 1, 1, 0, 0, 2pi),
+    EllipticalArc(Point(0, 0), r, r, 0, 0, -2pi),
+    ClosePath(),
+])
+
 export showphase, showphasetight, showarray, phasemap, showarray!, phaseplot, phaseplot!
 export phasetheme
+export plot_heatmaps_table, circle_with_hole
