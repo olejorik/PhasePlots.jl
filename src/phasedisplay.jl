@@ -122,12 +122,27 @@ phasetheme = Theme(;
 # functions to show array of similar plots
 #
 #
+"""
+    plot_heatmaps_table(
+    heatmaps_array;
+    ncols::Int=0,
+    width=150,
+    height=150,
+    colormap=:viridis,
+    limits = (0,0),
+    hidedecorations=false,
+    kwargs...,
+)
+
+Show a vector of 2D arrays as a matrix of heatmaps with a common colorbar below.
+"""
 function plot_heatmaps_table(
     heatmaps_array;
     ncols::Int=0,
     width=150,
     height=150,
     colormap=:viridis,
+    limits=(0, 0),
     hidedecorations=false,
     kwargs...,
 )
@@ -141,8 +156,12 @@ function plot_heatmaps_table(
     fig = Figure(; size=(width * ncols, height * _nrows))
 
     ## Define a common color range for all heatmaps
-    min_val = minimum([minimum(filter(!isnan, hm)) for hm in heatmaps_array])
-    max_val = maximum([maximum(filter(!isnan, hm)) for hm in heatmaps_array])
+    if limits == (0, 0)
+        min_val = minimum([minimum(filter(!isnan, hm)) for hm in heatmaps_array])
+        max_val = maximum([maximum(filter(!isnan, hm)) for hm in heatmaps_array])
+    else
+        min_val, max_val = limits
+    end
 
     ## Generate heatmaps
     for (i, hm) in enumerate(heatmaps_array)
