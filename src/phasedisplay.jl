@@ -131,6 +131,7 @@ phasetheme = Theme(;
     colormap=:viridis,
     limits = (0,0),
     hidedecorations=false,
+    rot=1, # rotate each array `rot` times 90° CCW
     kwargs...,
 )
 
@@ -144,8 +145,15 @@ function plot_heatmaps_table(
     colormap=:viridis,
     limits=(0, 0),
     hidedecorations=false,
+    rot=1,
+    titles="",
     kwargs...,
 )
+
+    if titles == ""
+        titles = fill("", length(heatmaps_array))
+    end
+
     if ncols == 0
         ## Calculate the number of columns based on the number of heatmaps
         ncols = ceil(Int, sqrt(length(heatmaps_array)))
@@ -166,10 +174,13 @@ function plot_heatmaps_table(
     ## Generate heatmaps
     for (i, hm) in enumerate(heatmaps_array)
         ax = Axis(fig[ind(i)...]; width=width, height=height, aspect=DataAspect())
+        ax.title = titles[i]
         if hidedecorations
             hidedecorations!(ax)
         end
-        heatmap!(ax, hm; colorrange=(min_val, max_val), colormap=colormap, kwargs...)
+        heatmap!(
+            ax, rotr90(hm, rot); colorrange=(min_val, max_val), colormap=colormap, kwargs...
+        )
     end
 
     ## Add a common colorbar
