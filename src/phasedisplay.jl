@@ -147,6 +147,8 @@ function plot_heatmaps_table(
     hidedecorations=false,
     rot=1,
     titles="",
+    title="",
+    titlesize=20,
     kwargs...,
 )
 
@@ -185,6 +187,11 @@ function plot_heatmaps_table(
 
     ## Add a common colorbar
     Colorbar(fig[end + 1, :]; limits=(min_val, max_val), colormap=colormap, vertical=false)
+
+    if title != ""
+        Label(fig[0, :], title; fontsize=titlesize)
+    end
+
 
     resize_to_layout!(fig)
     return fig
