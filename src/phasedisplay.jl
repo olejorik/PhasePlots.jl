@@ -31,7 +31,7 @@ function showphase(inarr; rot=1, fig=Figure(), picsize=512, cm=phasemap)
     ax = CairoMakie.Axis(fig[1, 1]; aspect=1)
     hm = heatmap!(ax, phwrap.(rotr90(arr, rot)); colormap=cm, colorrange=(-π, π))
     cb = Colorbar(fig[1, 2], hm; width=10, tellheight=true)
-    return fig, ax, cb
+    return fig
 end
 
 function showphase!(ax, inarr; rot=1, picsize=512, cm=phasemap)
@@ -60,7 +60,7 @@ function showphasetight(
     if hidedec
         hidedecorations!(ax; grid=false)
     end
-    return fig, ax, hm
+    return fig
 end
 
 @recipe(PhasePlot, arr) do scene
@@ -205,6 +205,7 @@ circle_with_hole(r=0.9) = BezierPath([
     ClosePath(),
 ])
 
-export showphase, showphasetight, showarray, phasemap, showarray!, phaseplot, phaseplot!
+export showphase,
+    showphase!, showphasetight, showarray, phasemap, showarray!, phaseplot, phaseplot!
 export phasetheme
 export plot_heatmaps_table, circle_with_hole
