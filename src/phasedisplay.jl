@@ -197,6 +197,70 @@ function plot_heatmaps_table(
     return fig
 end
 
+function plot_heatmaps_table!(
+    parent_layout,
+    heatmaps_array;
+    ncols::Int=0,
+    width=150,
+    height=150,
+    colormap=:viridis,
+    limits=(0, 0),
+    hidedecorations=false,
+    rot=1,
+    titles="",
+    title="",
+    titlesize=20,
+    show_colorbar=false, # New keyword argument to control colorbar display
+    kwargs...,
+)
+
+    if titles == ""
+        titles = fill("", length(heatmaps_array))
+    end
+
+    if ncols == 0
+        ## Calculate the number of columns based on the number of heatmaps
+        ncols = ceil(Int, sqrt(length(heatmaps_array)))
+    end
+    ind(i) = divrem(i - 1 + ncols, ncols)
+
+    _nrows = ceil(Int, length(heatmaps_array) / ncols)
+
+    ## Define a common color range for all heatmaps
+    if limits == (0, 0)
+        min_val = minimum([minimum(filter(!isnan, hm)) for hm in heatmaps_array])
+        max_val = maximum([maximum(filter(!isnan, hm)) for hm in heatmaps_array])
+    else
+        min_val, max_val = limits
+    end
+
+
+    ## Generate heatmaps
+    for (i, hm) in enumerate(heatmaps_array)
+        row, col = ind(i)
+        ax = Axis(parent_layout[row, col]; width=width, height=height, aspect=DataAspect())
+        ax.title = titles[i]
+        if hidedecorations
+            hidedecorations!(ax)
+        end
+        heatmap!(
+            ax, rotr90(hm, rot); colorrange=(min_val, max_val), colormap=colormap, kwargs...
+        )
+    end
+
+    ## Add a common colorbar
+    show_colorbar && Colorbar(
+        parent_layout[_nrows + 1, 1];
+        limits=(min_val, max_val),
+        colormap=colormap,
+        vertical=false,
+    )
+
+    if title != ""
+        Label(parent_layout[0, 1], title; fontsize=titlesize)
+    end
+end
+
 # # to mark some details on the plot
 circle_with_hole(r=0.9) = BezierPath([
     MoveTo(Point(1, 0)),
@@ -207,4 +271,4 @@ circle_with_hole(r=0.9) = BezierPath([
 
 export showphase, showphasetight, showarray, phasemap, showarray!, phaseplot, phaseplot!
 export phasetheme
-export plot_heatmaps_table, circle_with_hole
+export plot_heatmaps_table, plot_heatmaps_table!, circle_with_hole
