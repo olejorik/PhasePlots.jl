@@ -1,3 +1,7 @@
+using GLMakie
+using GLMakie: Gray, N0f8
+
+
 function conic_to_axes(coeffs, normalise=true)
     # https://www.wikiwand.com/en/Ellipse#/General_ellipse
     # Extract  conic parameters
@@ -107,15 +111,20 @@ function _pos_to_elpoints(positions)
 end
 
 
-function inside_ellipse(coeffs, position)
+function inside_ellipse(coeffs, position; shift=false)
     x, y = Tuple(position)
+    if shift
+        x -= 0.5
+        y -= 0.5
+    end
+
     return [x^2, x * y, y^2, x, y, 1]' * coeffs <= 0
 end
 
 function mask_ellipse(img, coeffs)
     mask = similar(img, Bool)
     for i in CartesianIndices(img)
-        mask[i] = inside_ellipse(coeffs, i)
+        mask[i] = inside_ellipse(coeffs, i; shift=true)
     end
     return mask
 end
@@ -140,7 +149,7 @@ function draw_ellipse(img)
     helpmessage = """
     Controls :
     a to switch to "add a point" mode
-    d to swith to "delete a point" mode
+    d to switch to "delete a point" mode
     p to switch to passive mode
     e to toggle ellipse/polygon mode
     h to show/hide this message
@@ -150,7 +159,9 @@ function draw_ellipse(img)
     Esc or q to quit
     """
 
-    fig, ax, implot = image(rotr90(img); axis=(aspect=DataAspect(),))
+    isbig = size(img)[1] > 128 && size(img)[2] > 128
+
+    fig, ax, implot = image(rotr90(img); axis=(aspect=DataAspect(),), interpolate=isbig)
 
     mode = :ellipse
     positions = Observable(Point2f[])
@@ -225,8 +236,42 @@ function draw_ellipse(img)
     return to_value(current_el), rotr90(mask_ellipse(rotr90(img), to_value(current_el)), 3)
 end  # function draw_ellipse
 
+"""
+    draw_or_load_ellipse(elfile, img, apfile="", saveap=true)
 
-export draw_ellipse
+    Loads an ellipse from jld2 file named `elfile`, and if not found, it will display the image `img` and let you draw an ellipse there.
+    If saveap is true, it will save the aperture to `apfile` ("ap.png" by default) in the same directory as `elfile`.
+
+
+Display an image and let you draw an ellipse there.
+    Controls :
+    a+ click to add a point
+    d+ click to delete a point
+    mouse wheel or left mouse press and draw to zoom
+    right mouse to pan
+    Ctrl+click to reset zoom
+    Esc or q to quit
+"""
+function draw_or_load_ellipse(elfile, img, apfile=""; saveap=false)
+    if apfile == ""
+        apfile = joinpath(dirname(elfile), "ap.tif")
+    end
+
+    return try
+        el = load(elfile, "el")
+        @info "Aperture loaded"
+        el
+    catch
+        @info "Aperture not found, please draw it"
+        GLMakie.activate!()
+        el, ap = draw_ellipse(img)
+        saveap && (save(apfile, Gray{N0f8}.(ap));
+        @info "$apfile is saved")
+        jldsave(elfile; el)
+        CairoMakie.activate!(; type="png")
+        el
+    end
+end
 
 
 
@@ -523,7 +568,7 @@ function draw_filled_polygon!(
             for r in lo:hi
                 target[r, c] = fill_value
             end
-            k += 2
+            k += 2i
         end
     end
     return target
