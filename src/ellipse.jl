@@ -568,7 +568,7 @@ function draw_filled_polygon!(
             for r in lo:hi
                 target[r, c] = fill_value
             end
-            k += 2i
+            k += 2
         end
     end
     return target
