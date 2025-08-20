@@ -170,7 +170,7 @@ phasetheme = Theme(;
 #
 #
 """
-    plot_heatmaps_table(heatmaps_array; ncols=0, width=150, height=150, colormap=:viridis, limits=(0,0), hidedecorations=false, rot=1, kwargs...)
+    plot_heatmaps_table(heatmaps_array; ncols=0, width=150, height=150, colormap=:viridis, limits=(0,0), hidedecorations=false, rot=1, aspect=DataAspect(), kwargs...)
 
 Show a vector of 2D arrays as a matrix of heatmaps with a common colorbar below.
 
@@ -183,6 +183,7 @@ Show a vector of 2D arrays as a matrix of heatmaps with a common colorbar below.
 - `limits`: Common color range for all heatmaps (default: auto-calculated).
 - `hidedecorations`: Whether to hide axis decorations (default: false).
 - `rot`: Number of 90° counterclockwise rotations to apply to each array (default: 1).
+- `aspect`: Aspect ratio for the axes (default: `DataAspect()`).
 - `kwargs`: Additional keyword arguments for the heatmaps.
 
 # Returns
@@ -208,6 +209,7 @@ function plot_heatmaps_table(
     titles="",
     title="",
     titlesize=20,
+    aspect=DataAspect(),
     kwargs...,
 )
     l = length(heatmaps_array)
@@ -234,15 +236,15 @@ function plot_heatmaps_table(
     end
 
     ## Generate heatmaps
-    for i in 1:l
-        ax = Axis(fig[ind(i)...]; width=width, height=height, aspect=DataAspect())
+    for (i, arr) in enumerate(heatmaps_array)
+        ax = Axis(fig[ind(i)...]; width=width, height=height, aspect=aspect)
         ax.title = titles[i]
         if hidedecorations
             hidedecorations!(ax)
         end
         heatmap!(
             ax,
-            rotr90(heatmaps_array[i], rot);
+            rotr90(arr, rot);
             colorrange=(min_val, max_val),
             colormap=colormap,
             kwargs...,
@@ -275,6 +277,7 @@ function plot_heatmaps_table!(
     title="",
     titlesize=20,
     show_colorbar=false, # New keyword argument to control colorbar display
+    aspect=DataAspect(),
     kwargs...,
 )
 
@@ -302,7 +305,7 @@ function plot_heatmaps_table!(
     ## Generate heatmaps
     for (i, hm) in enumerate(heatmaps_array)
         row, col = ind(i)
-        ax = Axis(parent_layout[row, col]; width=width, height=height, aspect=DataAspect())
+        ax = Axis(parent_layout[row, col]; width=width, height=height, aspect=aspect)
         ax.title = titles[i]
         if hidedecorations
             hidedecorations!(ax)

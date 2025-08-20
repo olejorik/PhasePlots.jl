@@ -11,6 +11,14 @@ include("phasedisplay.jl")
 
 
 
-export dpng, save_figs_as_gif, draw_ellipse, draw_or_load_ellipse
+export dpng,
+    save_figs_as_gif,
+    draw_ellipse,
+    draw_or_load_ellipse,
+    showarray,
+    showphase,
+    showphase!,
+    plot_heatmaps_table
+export plot_heatmaps_table!, showphasetight, phaseplot, phaseplot!, phasemap, phasetheme
 
 end
