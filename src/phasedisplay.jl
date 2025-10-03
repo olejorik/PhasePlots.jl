@@ -21,6 +21,17 @@ function showarray(arr; colormap=:viridis, rot=1, args...)
     )
 end
 
+function showarray(x, y, arr; colormap=:viridis, rot=1, args...)
+    return heatmap(
+        x,
+        y,
+        rotr90(arr, rot);
+        colormap=colormap,
+        args...,
+        axis=merge(get(args, :axis, (;)), (aspect=DataAspect(),)),
+    )
+end
+
 """
     showphase(inarr; rot=1, fig=Figure(), picsize=512, cm=phasemap)
 
@@ -199,6 +210,8 @@ fig
 """
 function plot_heatmaps_table(
     heatmaps_array;
+    x=nothing,
+    y=nothing,
     ncols::Int=0,
     width=150,
     height=150,
@@ -242,13 +255,26 @@ function plot_heatmaps_table(
         if hidedecorations
             hidedecorations!(ax)
         end
-        heatmap!(
-            ax,
-            rotr90(arr, rot);
-            colorrange=(min_val, max_val),
-            colormap=colormap,
-            kwargs...,
-        )
+        if !(x === nothing) && !(y === nothing)
+            heatmap!(
+                ax,
+                x,
+                y,
+                rotr90(arr, rot);
+                colorrange=(min_val, max_val),
+                colormap=colormap,
+                kwargs...,
+            )
+        else
+
+            heatmap!(
+                ax,
+                rotr90(arr, rot);
+                colorrange=(min_val, max_val),
+                colormap=colormap,
+                kwargs...,
+            )
+        end
     end
 
     ## Add a common colorbar
